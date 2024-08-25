@@ -55,6 +55,8 @@ export default function App() {
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
+    map.current.getCanvas().style.cursor = 'crosshair';
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
         let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
@@ -113,6 +115,8 @@ export default function App() {
   useEffect(() => {
     if (!apiHourly) return;
     // console.log({apiHourly});
+
+    console.log(`Drawing.`);
 
     setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
 
