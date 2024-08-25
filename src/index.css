@@ -1,0 +1,105 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.forecastInfo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 6px 12px;
+  font-family: monospace;
+  z-index: 1;
+  margin: 12px;
+
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.day {
+  display: inline-block;
+  margin: 0px 5px;
+  border-right: 1px solid black;
+  opacity: .9;
+}
+
+.date {
+  font-weight: bold;
+}
+
+.hour {
+  display: inline-block;
+  margin-right: 5px;
+  background: #ccc;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.wind > .arrow {
+  display: inline-block;
+  font-size: 1.5em;
+  transform-origin: 50% 60%;
+}
+.wind > .text {
+  display: inline-block;
+  padding-left: .3em;
+}
+
+.wind.low .arrow { color: darkgreen; }
+.wind.medium .arrow { color: orange; }
+.wind.high .arrow { color: red; }
+
+.wind .arrow.NNE { transform: rotate( 22.5deg); }
+.wind .arrow.NE  { transform: rotate( 45.0deg); }
+.wind .arrow.ENE { transform: rotate( 67.5deg); }
+.wind .arrow.E   { transform: rotate( 90.0deg); }
+.wind .arrow.ESE { transform: rotate(112.5deg); }
+.wind .arrow.SE  { transform: rotate(135.0deg); }
+.wind .arrow.SSE { transform: rotate(157.5deg); }
+.wind .arrow.S   { transform: rotate(180.0deg); }
+.wind .arrow.SSW { transform: rotate(202.5deg); }
+.wind .arrow.SW  { transform: rotate(225.0deg); }
+.wind .arrow.WSW { transform: rotate(247.5deg); }
+.wind .arrow.W   { transform: rotate(270.0deg); }
+.wind .arrow.WNW { transform: rotate(292.5deg); }
+.wind .arrow.NW  { transform: rotate(315.0deg); }
+.wind .arrow.NNW { transform: rotate(337.5deg); }
+
+.precip .emoji {
+  font-size: 1.5em;
+  padding-right: .3em;
+}
+
+.hour .icon img {
+  height: 34px;
+  margin-top: 3px;
+}
+
+
+
+.locationInfo {
+  position: absolute;
+  bottom: 2em;
+  left: 0;
+  background-color: rgb(35 55 75 / 90%);
+  color: #fff;
+  padding: 6px 12px;
+  font-family: monospace;
+  z-index: 1;
+  margin: 12px;
+  border-radius: 4px;
+}
