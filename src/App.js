@@ -72,7 +72,7 @@ export default function App() {
     
     map.current.flyTo({center: loc});
 
-    let url = `https://api.weather.gov/points/${loc.lat},${loc.lng}`;
+    let url = `https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
 
     async function fetchPoint() {
       console.log(`Fetching ${url}`);
