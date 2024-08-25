@@ -49,13 +49,12 @@ export default function App() {
       zoom: 11
     });
 
-    map.current.on('load', () => map.current.resize());
-
-    map.current.on('click', (e) => setLocation(e.lngLat));
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-
-    map.current.getCanvas().style.cursor = 'crosshair';
+    map.current.on('load', () => {
+      map.current.resize();
+      map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+      map.current.getCanvas().style.cursor = 'crosshair';
+      map.current.on('click', (e) => setLocation(e.lngLat));
+    });
 
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -76,21 +75,30 @@ export default function App() {
 
     let url = `https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
 
-    async function fetchPoint() {
-      console.log(`Fetching ${url}`);
-      await fetch(url)
-      .then(r => r.json())
-      .then(d => {
-        setApiPoint(d);
-      });
+    if (url in dataCache) {
+      if (dataCache[url] === null) return; // debounce
+      setApiHourly(null);
+      setApiPoint(dataCache[url]);
     }
-    fetchPoint();
+    else {
+      async function fetchPoint() {
+        console.log(`Fetching ${url}`);
+        dataCache[url] = null; // debounce
+        await fetch(url)
+        .then(r => r.json())
+        .then(d => {
+          dataCache[url] = d;
+          setApiHourly(null);
+          setApiPoint(d);
+        });
+      }
+      fetchPoint();      
+    }
   }, [loc]);
 
   // then get forecast
   useEffect(() => {
     if (!apiPoint) return;
-    // console.log({apiPoint});
 
     let url = apiPoint.properties.forecastHourly;
 
@@ -114,8 +122,8 @@ export default function App() {
   // and draw it all
   useEffect(() => {
     if (!apiHourly) return;
-    // console.log({apiHourly});
 
+    // console.log({apiPoint,apiHourly});
     console.log(`Drawing.`);
 
     setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
@@ -127,7 +135,7 @@ export default function App() {
 
     // update forecast display
     updateForecast();
-  }, [apiHourly]);
+  }, [apiPoint, apiHourly]);
 
   const clearCurrentDisplay = () => {
     setLocName('');
