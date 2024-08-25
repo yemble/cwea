@@ -33,12 +33,16 @@ html, body {
 .day {
   display: inline-block;
   margin: 0px 5px;
-  border-right: 1px solid black;
   opacity: .9;
 }
 
 .date {
+  margin-bottom: 3px;
+}
+.date span {
   font-weight: bold;
+  background: #bbb;
+  padding: 2px 3px;
 }
 
 .hour {

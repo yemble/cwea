@@ -30,7 +30,7 @@ const saveDefaultLoc = (loc) => {
 export default function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [loc, setLoc] = useState( getDefaultLoc() );
+  const [loc, setLocation] = useState( getDefaultLoc() );
   const [locName, setLocName] = useState('');
 
   const [apiPoint, setApiPoint] = useState(null);
@@ -51,7 +51,7 @@ export default function App() {
 
     map.current.on('load', () => map.current.resize());
 
-    map.current.on('click', (e) => setLoc(e.lngLat));
+    map.current.on('click', (e) => setLocation(e.lngLat));
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
@@ -59,7 +59,7 @@ export default function App() {
       navigator.geolocation.getCurrentPosition((position) => {
         let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
         saveDefaultLoc(loc);
-        setLoc(loc);
+        setLocation(loc);
       });      
     }
   });
@@ -82,7 +82,6 @@ export default function App() {
         setApiPoint(d);
       });
     }
-
     fetchPoint();
   }, [loc]);
 
@@ -90,8 +89,6 @@ export default function App() {
   useEffect(() => {
     if (!apiPoint) return;
     // console.log({apiPoint});
-
-    setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
 
     let url = apiPoint.properties.forecastHourly;
 
@@ -116,6 +113,8 @@ export default function App() {
   useEffect(() => {
     if (!apiHourly) return;
     // console.log({apiHourly});
+
+    setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
 
     // draw polygon
     if (apiHourly.geometry.type === 'Polygon') {
@@ -198,14 +197,12 @@ export default function App() {
         windSpeed: per.windSpeed,
         windSpeedEval: windSpeedEval(parseInt(per.windSpeed)),
         windDirection: per.windDirection,
-        // windDirectionDeg: direction(per.windDirection),
         shortForecast: per.shortForecast,
         icon: per.icon,
       })
     }
 
     let sorted = Object.keys(days).sort().map(key => days[key]);
-    console.log('sorted', sorted);
     setForecastDays(sorted);
   };
 
@@ -230,7 +227,7 @@ export default function App() {
 
 function ForecastDay({data}) {
   return (<div className="day">
-    <div className="date">{data.dateStr}</div>
+    <div className="date"><span>{data.dateStr}</span></div>
     <div className="hours">{data.hours.map(h => <ForecastHour data={h} />)}</div>
   </div>);
 };
