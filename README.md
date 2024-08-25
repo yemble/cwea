@@ -10,6 +10,6 @@ https://cwea.y3m.net/
 nvm use
 npm ci
 npm run start
-npm run build
-git commit ...
+npm run build && git add ./docs
+git status
 ```

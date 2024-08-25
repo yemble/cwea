@@ -252,6 +252,7 @@ function ForecastHour({data}) {
       <div className="text">{data.windSpeed}</div>
     </div>
     <div className="precip"><span className="emoji">☂️</span>{data.probabilityOfPrecipitation.value}%</div>
+    <div className="temp"><span className="emoji">🌡️</span>{data.temperature}°{data.temperatureUnit}</div>
     <div className="icon"><img src={data.icon} alt={data.shortForecast} /></div>
   </div>);
 };
