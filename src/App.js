@@ -141,6 +141,7 @@ export default function App() {
     setLocName('');
     let source = map.current.getSource(CURRENT_POLY);
     if(source) {
+      map.current.removeLayer(CURRENT_POLY);
       map.current.removeSource(CURRENT_POLY);
     }
     setForecastDays([]);
