@@ -43,6 +43,7 @@ html, body {
   font-weight: bold;
   background: #bbb;
   padding: 2px 3px;
+  border-radius: 2px;
 }
 
 .hour {
