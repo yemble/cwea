@@ -30,6 +30,9 @@ const saveDefaultLoc = (loc) => {
 export default function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
+
+  const [mapReady, setMapReady] = useState(false);
+
   const [loc, setLocation] = useState( getDefaultLoc() );
   const [locName, setLocName] = useState('');
 
@@ -54,20 +57,26 @@ export default function App() {
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       map.current.getCanvas().style.cursor = 'crosshair';
       map.current.on('click', (e) => setLocation(e.lngLat));
+
     });
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
-        saveDefaultLoc(loc);
-        setLocation(loc);
-      });      
-    }
+    map.current.on('style.load', () => {
+      setMapReady(true);
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
+          saveDefaultLoc(loc);
+          setLocation(loc);
+        });      
+      }
+    });
   });
 
   // move to new location
   useEffect(() => {
-    if (! ("lng" in loc)) return;
+    console.log({mapReady, loc});
+
+    if (! (mapReady) || ! ("lng" in loc)) return;
 
     clearCurrentDisplay();
     
@@ -94,7 +103,7 @@ export default function App() {
       }
       fetchPoint();      
     }
-  }, [loc]);
+  }, [mapReady, loc]);
 
   // then get forecast
   useEffect(() => {
@@ -228,7 +237,7 @@ export default function App() {
   return (
     <>
       <div className="forecastInfo">
-        {forecastDays.map(d => <ForecastDay data={d} />)}
+        {forecastDays.map(d => <ForecastDay data={d} key={d.dateStr} />)}
       </div>
       <div className="locationInfo">
         {locName} ({loc.lng.toFixed(4)},{loc.lat.toFixed(4)})
@@ -241,7 +250,7 @@ export default function App() {
 function ForecastDay({data}) {
   return (<div className="day">
     <div className="date"><span>{data.dateStr}</span></div>
-    <div className="hours">{data.hours.map(h => <ForecastHour data={h} />)}</div>
+    <div className="hours">{data.hours.map(h => <ForecastHour data={h} key={h.timeStr} />)}</div>
   </div>);
 };
 
