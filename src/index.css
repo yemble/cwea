@@ -47,6 +47,7 @@ html, body {
 .hour {
   display: inline-block;
   margin-right: 5px;
+  border: .5px solid grey;
   background: #fff;
   border-radius: 4px;
   padding: 4px;
@@ -100,7 +101,7 @@ html, body {
 
 
 
-.locationInfo {
+.metaBox {
   position: absolute;
   bottom: 2em;
   left: 0;
@@ -109,7 +110,20 @@ html, body {
   padding: 6px 12px;
   font-family: monospace;
   z-index: 1;
-  margin: 12px;
+  margin: 8px;
   border-radius: 4px;
   opacity: .6;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: bold;
+}
+.btn-link:hover {
+  cursor: pointer;
+}
+.btn-link.active {
+  text-decoration: underline;
 }

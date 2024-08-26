@@ -7,24 +7,40 @@ import Cookies from 'js-cookie';
 mapboxgl.accessToken = 'pk.eyJ1IjoieWVtYmxlIiwiYSI6ImNtMDl3Y2J3ajEzZTEybHB5dHRheXhlMzcifQ.T8Qw5LTnRFY09SCfrpnwSA';
 
 const CURRENT_POLY = 'currentPoly';
-const DEFAULT_LOC_COOKIE = 'defaultLoc';
+const SETTING_DEFAULT_LOC = 'defaultLoc';
+const SETTING_INTERVAL_HOUR = 'intervalHour';
 
 let dataCache = {}; // url => object
 
-const getDefaultLoc = () => {
-  let loc = Cookies.get(DEFAULT_LOC_COOKIE);
+const getSettings = () => {
+  let settings = {};
+
+  let loc = Cookies.get(SETTING_DEFAULT_LOC);
   if (loc) {
-    return JSON.parse(loc);
+    settings[SETTING_DEFAULT_LOC] = JSON.parse(loc);
   }
   else {
-    return {
+    settings[SETTING_DEFAULT_LOC] = {
       lng:-105.75505156380228,
       lat:40.441373439936406,
     };
   }
+
+  let ih = Cookies.get(SETTING_INTERVAL_HOUR);
+  if (ih) {
+    settings[SETTING_INTERVAL_HOUR] = parseInt(ih);
+  }
+  else {
+    settings[SETTING_INTERVAL_HOUR] = 3;
+  }
+
+  return settings;
 };
 const saveDefaultLoc = (loc) => {
-  Cookies.set(DEFAULT_LOC_COOKIE, JSON.stringify(loc));
+  Cookies.set(SETTING_DEFAULT_LOC, JSON.stringify(loc));
+};
+const saveIntervalHour = (hr) => {
+  Cookies.set(SETTING_INTERVAL_HOUR, hr);
 };
 
 export default function App() {
@@ -33,7 +49,7 @@ export default function App() {
 
   const [mapReady, setMapReady] = useState(false);
 
-  const [loc, setLocation] = useState( getDefaultLoc() );
+  const [loc, setLocation] = useState( getSettings()[SETTING_DEFAULT_LOC] );
   const [locName, setLocName] = useState('');
 
   const [displayedLocHash, setDisplayedLocHash] = useState(null);
@@ -42,6 +58,8 @@ export default function App() {
   const [apiHourly, setApiHourly] = useState(null);
 
   const [forecastDays, setForecastDays] = useState([]);
+
+  const [intervalHour, setIntervalHour] = useState( getSettings()[SETTING_INTERVAL_HOUR] )
 
   const locHash = (loc) => {
     return `${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
@@ -86,7 +104,7 @@ export default function App() {
   useEffect(() => {
     console.log({mapReady, loc: locHash(loc), displayedLocHash});
 
-    if (! (mapReady) || ! ("lng" in loc) || locHash(loc) == displayedLocHash) return;
+    if (! (mapReady) || ! ("lng" in loc) || locHash(loc) === displayedLocHash) return;
 
     clearCurrentDisplay();
     
@@ -143,20 +161,20 @@ export default function App() {
     if (!apiHourly) return;
 
     // console.log({apiPoint,apiHourly});
-    console.log(`Drawing.`);
+    console.log(`Redrawing.`);
 
     setDisplayedLocHash(locHash(loc));
 
     setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
 
-    // draw polygon
     if (apiHourly.geometry.type === 'Polygon') {
       updateCurrentPolygon(apiHourly.geometry.coordinates);
     }
 
-    // update forecast display
     updateForecast();
-  }, [apiPoint, apiHourly]);
+  // eslint-disable-next-line
+  }, [apiPoint, apiHourly, intervalHour]);
+
 
   const clearCurrentDisplay = () => {
     setLocName('');
@@ -210,7 +228,8 @@ export default function App() {
     for(let per of apiHourly.properties.periods) {
       let date = toDate(per.startTime);
       let hour = parseInt(formatInTimeZone(date, tz, 'H'));
-      if (! [6, 9, 12, 15, 18].includes(hour)) continue;
+
+      if (hour < 6 || hour > 18 || (hour % intervalHour) !== 0) continue;
 
       let dayKey = formatInTimeZone(date, tz, 'yyyy-MM-dd');
       let timeStr = formatInTimeZone(date, tz, 'haaa');
@@ -246,13 +265,24 @@ export default function App() {
     return 'medium';
   }
 
+  const handleInterval = (hr) => {
+    saveIntervalHour(hr);
+    setIntervalHour(hr);
+  };
+
   return (
     <>
       <div className="forecastInfo">
         {forecastDays.map(d => <ForecastDay data={d} key={d.dateStr} />)}
       </div>
-      <div className="locationInfo">
-        {locName} ({loc.lng.toFixed(4)},{loc.lat.toFixed(4)})
+      <div className="metaBox">
+        <div>{locName} ({loc.lng.toFixed(4)},{loc.lat.toFixed(4)})</div>
+        <div className="options">
+          Interval:&nbsp;
+          <button className={`btn-link ${intervalHour === 3 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(3)}>3h</button>&nbsp;
+          <button className={`btn-link ${intervalHour === 2 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(2)}>2h</button>&nbsp;
+          <button className={`btn-link ${intervalHour === 1 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(1)}>1h</button>
+        </div>
       </div>
       <div ref={mapContainer} className="map-container" />
     </>
