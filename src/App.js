@@ -67,13 +67,13 @@ export default function App() {
       setMapReady(true);
 
       if ("geolocation" in navigator) {
-        window.setTimeout(() => {
+        // window.setTimeout(() => {
           navigator.geolocation.getCurrentPosition((position) => {
             let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
             saveDefaultLoc(loc);
             setLocation(loc);
           });
-        }, 3000);
+        // }, 3000);
       }
     });
   });
