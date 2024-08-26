@@ -55,12 +55,16 @@ export default function App() {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [loc.lng, loc.lat],
-      zoom: 11
+      zoom: 11,
+      attributionControl: false,
     });
 
     map.current.on('load', () => {
       map.current.resize();
+
+      map.current.addControl(new mapboxgl.AttributionControl({customAttribution: 'Data from NWS'}));
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
       map.current.getCanvas().style.cursor = 'crosshair';
       map.current.on('click', (e) => setLocation(e.lngLat));
 
@@ -109,7 +113,7 @@ export default function App() {
       }
       fetchPoint();      
     }
-  }, [mapReady, loc]);
+  }, [mapReady, loc, displayedLocHash]);
 
   // then get forecast
   useEffect(() => {

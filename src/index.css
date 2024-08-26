@@ -113,4 +113,5 @@ html, body {
   z-index: 1;
   margin: 12px;
   border-radius: 4px;
+  opacity: .6;
 }
