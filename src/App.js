@@ -36,10 +36,16 @@ export default function App() {
   const [loc, setLocation] = useState( getDefaultLoc() );
   const [locName, setLocName] = useState('');
 
+  const [displayedLocHash, setDisplayedLocHash] = useState(null);
+
   const [apiPoint, setApiPoint] = useState(null);
   const [apiHourly, setApiHourly] = useState(null);
 
   const [forecastDays, setForecastDays] = useState([]);
+
+  const locHash = (loc) => {
+    return `${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
+  }
 
   // init map
   useEffect(() => {
@@ -67,16 +73,16 @@ export default function App() {
             saveDefaultLoc(loc);
             setLocation(loc);
           });
-        }, 5000);
+        }, 3000);
       }
     });
   });
 
   // move to new location
   useEffect(() => {
-    console.log({mapReady, loc});
+    console.log({mapReady, loc: locHash(loc), displayedLocHash});
 
-    if (! (mapReady) || ! ("lng" in loc)) return;
+    if (! (mapReady) || ! ("lng" in loc) || locHash(loc) == displayedLocHash) return;
 
     clearCurrentDisplay();
     
@@ -134,6 +140,8 @@ export default function App() {
 
     // console.log({apiPoint,apiHourly});
     console.log(`Drawing.`);
+
+    setDisplayedLocHash(locHash(loc));
 
     setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
 
