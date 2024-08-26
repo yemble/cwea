@@ -14,15 +14,13 @@ html, body {
 }
 
 
-
 .forecastInfo {
   position: absolute;
   top: 0;
   left: 0;
-  padding: 6px 12px;
   font-family: monospace;
   z-index: 1;
-  margin: 12px;
+  margin: 6px;
 
   white-space: nowrap;
   overflow-x: auto;
@@ -37,19 +35,19 @@ html, body {
 }
 
 .date {
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 .date span {
   font-weight: bold;
-  background: #bbb;
-  padding: 2px 3px;
+  background: #fff;
+  padding: 0 3px;
   border-radius: 2px;
 }
 
 .hour {
   display: inline-block;
   margin-right: 5px;
-  background: #ccc;
+  background: #fff;
   border-radius: 4px;
   padding: 4px;
   min-width: 65px;
