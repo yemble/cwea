@@ -58,11 +58,10 @@ export default function App() {
       map.current.getCanvas().style.cursor = 'crosshair';
       map.current.on('click', (e) => setLocation(e.lngLat));
 
-    });
-
-    map.current.on('style.load', () => {
       setMapReady(true);
+
       if ("geolocation" in navigator) {
+        // delay?
         navigator.geolocation.getCurrentPosition((position) => {
           let loc = {lat:position.coords.latitude, lng:position.coords.longitude};
           saveDefaultLoc(loc);
