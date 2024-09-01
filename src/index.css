@@ -59,16 +59,17 @@ span.temp.max { color: red; }
 
 .hour .pair {
   display: flex;
-  color: #333;
+  color: #555;
+  margin: 4px 0px;
 }
 .hour .pair .left {
-  width: 28px;
+  width: 30px;
 }
 
 .wind > .arrow {
   display: inline-block;
   text-align: center;
-  font-size: 1.4em;
+  font-size: 1.5em;
   transform-origin: 50% 50%;
 }
 .wind > .text {
@@ -95,14 +96,6 @@ span.temp.max { color: red; }
 .wind .arrow.WNW { transform: rotate(292.5deg); }
 .wind .arrow.NW  { transform: rotate(315.0deg); }
 .wind .arrow.NNW { transform: rotate(337.5deg); }
-
-.precip .emoji {
-  font-size: 1.3em;
-}
-
-.temp .emoji {
-  font-size: 1.0em;
-}
 
 .hour .icon {
   text-align: center;
