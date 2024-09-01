@@ -18,7 +18,7 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  font-family: monospace;
+  font-family: sans-serif;
   z-index: 1;
   margin: 6px;
 
@@ -34,15 +34,18 @@ html, body {
   opacity: .9;
 }
 
-.date {
+.dateLine {
   margin-bottom: 4px;
 }
-.date span {
+.dateLine > span {
   font-weight: bold;
   background: #fff;
   padding: 0 3px;
   border-radius: 2px;
 }
+
+span.temp.min { color: blue; }
+span.temp.max { color: red; }
 
 .hour {
   display: inline-block;
@@ -54,14 +57,23 @@ html, body {
   min-width: 65px;
 }
 
+.hour .pair {
+  display: flex;
+  color: #333;
+}
+.hour .pair .left {
+  width: 28px;
+}
+
 .wind > .arrow {
   display: inline-block;
-  font-size: 1.5em;
-  transform-origin: 50% 60%;
+  text-align: center;
+  font-size: 1.4em;
+  transform-origin: 50% 50%;
 }
 .wind > .text {
-  display: inline-block;
-  padding-left: .3em;
+  position: relative;
+  top: 2px;
 }
 
 .wind.low .arrow { color: darkgreen; }
@@ -86,14 +98,15 @@ html, body {
 
 .precip .emoji {
   font-size: 1.3em;
-  padding-right: .3em;
 }
 
 .temp .emoji {
   font-size: 1.0em;
-  padding-right: .3em;
 }
 
+.hour .icon {
+  text-align: center;
+}
 .hour .icon img {
   height: 34px;
   margin-top: 3px;

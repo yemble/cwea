@@ -255,8 +255,14 @@ export default function App() {
       })
     }
 
-    let sorted = Object.keys(days).sort().map(key => days[key]);
-    setForecastDays(sorted);
+    let sortedDays = Object.keys(days).sort().map(key => {
+      let day = days[key];
+      let temps = day.hours.map(h => h.temperature);
+      day.minTemp = parseInt(Math.min(...temps));
+      day.maxTemp = parseInt(Math.max(...temps));
+      return day;
+    });
+    setForecastDays(sortedDays);
   };
 
   const windSpeedEval = (mph) => {
@@ -291,7 +297,11 @@ export default function App() {
 
 function ForecastDay({data}) {
   return (<div className="day">
-    <div className="date"><span>{data.dateStr}</span></div>
+    <div className="dateLine"><span>
+      <span className="date">{data.dateStr}</span>&nbsp;
+      <span className="temp min" title="minimum">{data.minTemp}°</span>&nbsp;
+      <span className="temp max" title="maximum">{data.maxTemp}°</span>
+    </span></div>
     <div className="hours">{data.hours.map(h => <ForecastHour data={h} key={h.timeStr} />)}</div>
   </div>);
 };
@@ -299,12 +309,14 @@ function ForecastDay({data}) {
 function ForecastHour({data}) {
   return (<div className="hour" title={data.shortForecast}>
     <div className="time">{data.timeStr}</div>
-    <div className={`wind ${data.windSpeedEval}`}>
-      <div className={`emoji arrow ${data.windDirection}`}>↑</div>
+    <div className={`pair wind ${data.windSpeedEval}`}>
+      <div className={`left emoji arrow ${data.windDirection}`}>↑</div>
       <div className="text">{data.windSpeed}</div>
     </div>
-    <div className="precip"><span className="emoji">☂️</span>{data.probabilityOfPrecipitation.value}%</div>
-    <div className="temp"><span className="emoji">🌡️</span>{data.temperature}°{data.temperatureUnit}</div>
+
+    <div className="pair precip"><span className="left emoji">🌧️</span><span>{data.probabilityOfPrecipitation.value}%</span></div>
+
+    <div className="pair temp"><span className="left emoji">🌡️</span>{data.temperature}°{data.temperatureUnit}</div>
     <div className="icon"><img src={data.icon} alt={data.shortForecast} /></div>
   </div>);
 };
