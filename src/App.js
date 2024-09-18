@@ -37,10 +37,10 @@ const getSettings = () => {
   return settings;
 };
 const saveDefaultLoc = (loc) => {
-  Cookies.set(SETTING_DEFAULT_LOC, JSON.stringify(loc));
+  Cookies.set(SETTING_DEFAULT_LOC, JSON.stringify(loc), {expires: 365});
 };
 const saveIntervalHour = (hr) => {
-  Cookies.set(SETTING_INTERVAL_HOUR, hr);
+  Cookies.set(SETTING_INTERVAL_HOUR, hr, {expires: 365});
 };
 
 export default function App() {
