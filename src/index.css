@@ -81,21 +81,22 @@ span.temp.max { color: red; }
 .wind.medium .arrow { color: orange; }
 .wind.high .arrow { color: red; }
 
-.wind .arrow.NNE { transform: rotate( 22.5deg); }
-.wind .arrow.NE  { transform: rotate( 45.0deg); }
-.wind .arrow.ENE { transform: rotate( 67.5deg); }
-.wind .arrow.E   { transform: rotate( 90.0deg); }
-.wind .arrow.ESE { transform: rotate(112.5deg); }
-.wind .arrow.SE  { transform: rotate(135.0deg); }
-.wind .arrow.SSE { transform: rotate(157.5deg); }
-.wind .arrow.S   { transform: rotate(180.0deg); }
-.wind .arrow.SSW { transform: rotate(202.5deg); }
-.wind .arrow.SW  { transform: rotate(225.0deg); }
-.wind .arrow.WSW { transform: rotate(247.5deg); }
-.wind .arrow.W   { transform: rotate(270.0deg); }
-.wind .arrow.WNW { transform: rotate(292.5deg); }
-.wind .arrow.NW  { transform: rotate(315.0deg); }
-.wind .arrow.NNW { transform: rotate(337.5deg); }
+.wind .arrow.S   { }
+.wind .arrow.SSW { transform: rotate( 22.5deg); }
+.wind .arrow.SW  { transform: rotate( 45.0deg); }
+.wind .arrow.WSW { transform: rotate( 67.5deg); }
+.wind .arrow.W   { transform: rotate( 90.0deg); }
+.wind .arrow.WNW { transform: rotate(112.5deg); }
+.wind .arrow.NW  { transform: rotate(135.0deg); }
+.wind .arrow.NNW { transform: rotate(157.5deg); }
+.wind .arrow.N   { transform: rotate(180.0deg); }
+.wind .arrow.NNE { transform: rotate(202.5deg); }
+.wind .arrow.NE  { transform: rotate(225.0deg); }
+.wind .arrow.ENE { transform: rotate(247.5deg); }
+.wind .arrow.E   { transform: rotate(270.0deg); }
+.wind .arrow.ESE { transform: rotate(292.5deg); }
+.wind .arrow.SE  { transform: rotate(315.0deg); }
+.wind .arrow.SSE { transform: rotate(337.5deg); }
 
 .hour .icon {
   text-align: center;
