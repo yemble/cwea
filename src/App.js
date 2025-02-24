@@ -6,9 +6,15 @@ import Cookies from 'js-cookie';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoieWVtYmxlIiwiYSI6ImNtMDl3Y2J3ajEzZTEybHB5dHRheXhlMzcifQ.T8Qw5LTnRFY09SCfrpnwSA';
 
-const CURRENT_POLY = 'currentPoly';
+const MAP_LOC_LAYER_ID = 'mapLocLayer';
+let mapMarker = null;
+
 const SETTING_DEFAULT_LOC = 'defaultLoc';
 const SETTING_INTERVAL_HOUR = 'intervalHour';
+
+const SOURCE_NWS = 'USA NWS';
+const SOURCE_OPENMETEO = 'Open-Meteo';
+const dataSource = SOURCE_OPENMETEO;
 
 let dataCache = {}; // url => object
 
@@ -50,11 +56,10 @@ export default function App() {
   const [mapReady, setMapReady] = useState(false);
 
   const [loc, setLocation] = useState( getSettings()[SETTING_DEFAULT_LOC] );
-  const [locName, setLocName] = useState('');
 
   const [displayedLocHash, setDisplayedLocHash] = useState(null);
 
-  const [apiPoint, setApiPoint] = useState(null);
+  const [currentPointMetadata, setCurrentPointMetadata] = useState(null);
   const [apiHourly, setApiHourly] = useState(null);
 
   const [forecastDays, setForecastDays] = useState([]);
@@ -80,7 +85,7 @@ export default function App() {
     map.current.on('load', () => {
       map.current.resize();
 
-      map.current.addControl(new mapboxgl.AttributionControl({customAttribution: 'Data from NWS'}));
+      map.current.addControl(new mapboxgl.AttributionControl({customAttribution: `Data from ${dataSource}`}));
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
       map.current.getCanvas().style.cursor = 'crosshair';
@@ -102,7 +107,7 @@ export default function App() {
 
   // move to new location
   useEffect(() => {
-    console.log({mapReady, loc: locHash(loc), displayedLocHash});
+    // console.log({mapReady, loc: locHash(loc), displayedLocHash});
 
     if (! (mapReady) || ! ("lng" in loc) || locHash(loc) === displayedLocHash) return;
 
@@ -110,165 +115,349 @@ export default function App() {
     
     map.current.flyTo({center: loc});
 
-    let url = `https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
-
-    if (url in dataCache) {
-      if (dataCache[url] === null) return; // debounce
-      setApiHourly(null);
-      setApiPoint(dataCache[url]);
-    }
-    else {
-      async function fetchPoint() {
-        console.log(`Fetching ${url}`);
-        dataCache[url] = null; // debounce
-        await fetch(url)
-        .then(r => r.json())
-        .then(d => {
-          dataCache[url] = d;
+    switch(dataSource) {
+      case SOURCE_NWS:
+        let url = `https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
+        if (url in dataCache) {
+          if (dataCache[url] === null) return; // debounce
           setApiHourly(null);
-          setApiPoint(d);
+          setCurrentPointMetadata({
+            lat: loc.lat,
+            lng: loc.lng,
+            source: SOURCE_NWS,
+            hourlyURL: dataCache[url].properties.forecastHourly,
+            timeZone: dataCache[url].properties.timeZone,
+          });
+        }
+        else {
+          async function fetchPoint() {
+            console.log(`Fetching ${url}`);
+            dataCache[url] = null; // debounce
+            await fetch(url).then(r => r.json()).then(d => {
+              dataCache[url] = d;
+              setApiHourly(null);
+              setCurrentPointMetadata({
+                lat: loc.lat,
+                lng: loc.lng,
+                source: SOURCE_NWS,
+                hourlyURL: d.properties.forecastHourly,
+                timeZone: d.properties.timeZone,
+              });
+            });
+          }
+          fetchPoint();      
+        }
+        break;
+
+      case SOURCE_OPENMETEO:
+        // TODO: fetch timezone?
+        setCurrentPointMetadata({
+          lat: loc.lat,
+          lng: loc.lng,
+          source: SOURCE_OPENMETEO,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         });
-      }
-      fetchPoint();      
+        break;
+      
+      default:
+        throw new Error("Unknown data source: " + dataSource);
     }
   }, [mapReady, loc, displayedLocHash]);
 
   // then get forecast
   useEffect(() => {
-    if (!apiPoint) return;
+    if (!currentPointMetadata) return;
 
-    let url = apiPoint.properties.forecastHourly;
+    switch(dataSource) {
+      case SOURCE_NWS:
+        let nwsURL = currentPointMetadata.hourlyURL;
 
-    if (url in dataCache) {
-      setApiHourly(dataCache[url])
+        if (nwsURL in dataCache) {
+          setApiHourly(dataCache[nwsURL])
+        }
+        else {
+          async function fetchNwsHourly() {
+            console.log(`Fetching ${nwsURL}`);
+            await fetch(nwsURL)
+            .then(r => r.json())
+            .then(d => {
+              dataCache[nwsURL] = d;
+              setApiHourly(d);
+            });
+          }
+          fetchNwsHourly();
+        }    
+        break;
+
+      case SOURCE_OPENMETEO:
+        let omURL = `https://api.open-meteo.com/v1/forecast?forecast_days=14`
+        + `&latitude=${currentPointMetadata.lat.toFixed(4)}&longitude=${currentPointMetadata.lng.toFixed(4)}`
+        + `&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
+        + `&temperature_unit=fahrenheit&wind_speed_unit=mph&timeformat=unixtime`
+        + `&timezone=${currentPointMetadata.timeZone}`;
+
+        if (omURL in dataCache) {
+          setApiHourly(dataCache[omURL])
+        }
+        else {
+          async function fetchOmHourly() {
+            console.log(`Fetching ${omURL}`);
+            await fetch(omURL)
+            .then(r => r.json())
+            .then(d => {
+              dataCache[omURL] = d;
+              setApiHourly(d);
+            });
+          }
+          fetchOmHourly();
+        }    
+        break;
+      
+      default:
+        throw new Error("Unknown data source: " + dataSource);
     }
-    else {
-      async function fetchHourly() {
-        console.log(`Fetching ${url}`);
-        await fetch(url)
-        .then(r => r.json())
-        .then(d => {
-          dataCache[url] = d;
-          setApiHourly(d);
-        });
-      }
-      fetchHourly();
-    }
-  }, [apiPoint]);
+  }, [currentPointMetadata]);
 
   // and draw it all
   useEffect(() => {
     if (!apiHourly) return;
 
-    // console.log({apiPoint,apiHourly});
+    // console.log({currentPointMetadata,apiHourly});
     console.log(`Redrawing.`);
 
     setDisplayedLocHash(locHash(loc));
 
-    setLocName(apiPoint.properties.relativeLocation.properties.city ?? '');
-
-    if (apiHourly.geometry.type === 'Polygon') {
-      updateCurrentPolygon(apiHourly.geometry.coordinates);
+    switch(dataSource) {
+      case SOURCE_NWS:
+        if (apiHourly.geometry.type) {
+          updateCurrentFeature(apiHourly.geometry.coordinates, apiHourly.geometry.type);
+        }
+        break;
+      case SOURCE_OPENMETEO:
+        updateCurrentFeature([currentPointMetadata.lng, currentPointMetadata.lat], 'Marker');
+        break;
+      default:
     }
 
     updateForecast();
   // eslint-disable-next-line
-  }, [apiPoint, apiHourly, intervalHour]);
+  }, [currentPointMetadata, apiHourly, intervalHour]);
 
 
   const clearCurrentDisplay = () => {
-    setLocName('');
-    let source = map.current.getSource(CURRENT_POLY);
+    let source = map.current.getSource(MAP_LOC_LAYER_ID);
     if(source) {
-      map.current.removeLayer(CURRENT_POLY);
-      map.current.removeSource(CURRENT_POLY);
+      map.current.removeLayer(MAP_LOC_LAYER_ID);
+      map.current.removeSource(MAP_LOC_LAYER_ID);
     }
+
+    if(mapMarker) {
+      mapMarker.remove();
+    }
+
     setForecastDays([]);
   };
 
-  const updateCurrentPolygon = (coordsList) => {
-    let geoData = {
-      type: 'Feature',
-      geometry: {
-        type: 'Polygon',
-        coordinates: coordsList,
-      }
-    };
-
-    let source = map.current.getSource(CURRENT_POLY);
-
-    if (source) {
-      source.setData(geoData);
-    }
-    else {
-      map.current.addSource(CURRENT_POLY, {
-        type: 'geojson',
-        data: geoData,
-      });
-      map.current.addLayer({
-          id: CURRENT_POLY,
-          type: 'fill',
-          source: CURRENT_POLY,
-          layout: {},
-          paint: {
-              'fill-color': '#ff5555',
-              'fill-opacity': 0.2,
+  const updateCurrentFeature = (coords, shape) => {
+    switch(shape) {
+      case 'Polygon':
+        let geoData = {
+          type: 'Feature',
+          geometry: {
+            type: shape,
+            coordinates: coords,
           }
-      });
+        };
+
+        let source = map.current.getSource(MAP_LOC_LAYER_ID);
+
+        if (source) {
+          source.setData(geoData);
+        }
+        else {
+          map.current.addSource(MAP_LOC_LAYER_ID, {
+            type: 'geojson',
+            data: geoData,
+          });
+
+          map.current.addLayer({
+            id: MAP_LOC_LAYER_ID,
+            type: 'fill',
+            source: MAP_LOC_LAYER_ID,
+            // layout: {},
+            paint: {'fill-color': '#ff5555', 'fill-opacity': 0.2},
+          });
+        }
+        break;
+
+      case 'Marker':
+        if(! mapMarker) {
+          mapMarker = new mapboxgl.Marker()
+        }
+        mapMarker
+            .setLngLat(coords)
+            .addTo(map.current);  
+        break;
+      default:
     }
   };
 
   const updateForecast = () => {
-    // const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const pointTimeZone = apiPoint.properties.timeZone;
-    const tz = pointTimeZone;
+    const tz = apiHourly.timezone || currentPointMetadata.timeZone;
 
     const days = {};
 
-    for(let per of apiHourly.properties.periods) {
-      let date = toDate(per.startTime);
-      let hour = parseInt(formatInTimeZone(date, tz, 'H'));
+    switch(dataSource) {
+      case SOURCE_NWS:
+        for(let per of apiHourly.properties.periods) {
+          let date = toDate(per.startTime);
+          let hour = parseInt(formatInTimeZone(date, tz, 'H'));
+    
+          if (hour < 6 || hour > 18) continue;
+    
+          let dayKey = formatInTimeZone(date, tz, 'yyyy-MM-dd');
+          let timeStr = formatInTimeZone(date, tz, 'haaa');
+          let dateStr = formatInTimeZone(date, tz, 'eee L/d');
 
-      if (hour < 6 || hour > 18 || (hour % intervalHour) !== 0) continue;
+          if (! (dayKey in days)) {
+            days[dayKey] = {
+              dateStr,
+              tz,
+              hours: [],
+              minTemp: parseInt(per.temperature),
+              maxTemp: parseInt(per.temperature),
+            };
+          }
 
-      let dayKey = formatInTimeZone(date, tz, 'yyyy-MM-dd');
-      let timeStr = formatInTimeZone(date, tz, 'haaa');
-      let dateStr = formatInTimeZone(date, tz, 'eee L/d');
+          days[dayKey].minTemp = Math.min(days[dayKey].minTemp, parseInt(per.temperature));
+          days[dayKey].maxTemp = Math.max(days[dayKey].maxTemp, parseInt(per.temperature));
 
-      if (! (dayKey in days)) {
-        days[dayKey] = {
-          dateStr,
-          hours: [],
-        };
-      }
+          if ((hour % intervalHour) !== 0) continue;
 
-      days[dayKey].hours.push({
-        timeStr,
-        temperature: per.temperature,
-        temperatureUnit: per.temperatureUnit,
-        probabilityOfPrecipitation: per.probabilityOfPrecipitation,
-        windSpeed: per.windSpeed,
-        windSpeedEval: windSpeedEval(parseInt(per.windSpeed)),
-        windDirection: per.windDirection,
-        shortForecast: per.shortForecast,
-        icon: per.icon,
-      })
+          days[dayKey].hours.push({
+            timeStr,
+            temperature: parseInt(per.temperature),
+            temperatureUnit: `°${per.temperatureUnit}`,
+            probabilityOfPrecipitation: per.probabilityOfPrecipitation.value,
+            windSpeed: parseInt(per.windSpeed),
+            windSpeedUnit: 'mph',
+            windSpeedEval: windSpeedEval(parseInt(per.windSpeed)),
+            windDirection: per.windDirection,
+            description: per.shortForecast,
+            // icon: per.icon,
+          })
+        }
+        break;
+
+      case SOURCE_OPENMETEO:
+        for(let [idx,timestamp] of Object.entries(apiHourly.hourly.time)) {
+          if (timestamp < Date.now()/1000 - 2*3600) continue;
+
+          let date = toDate(new Date(timestamp*1000));
+          let hour = parseInt(formatInTimeZone(date, tz, 'H'));
+
+          if (hour < 6 || hour > 18) continue;
+    
+          let dayKey = formatInTimeZone(date, tz, 'yyyy-MM-dd');
+          let timeStr = formatInTimeZone(date, tz, 'haaa');
+          let dateStr = formatInTimeZone(date, tz, 'eee L/d');
+    
+          // console.log(idx, timestamp, date, hour, dayKey, dateStr, timeStr);
+
+          if (! (dayKey in days)) {
+            days[dayKey] = {
+              dateStr,
+              tz,
+              hours: [],
+              minTemp: parseInt(apiHourly.hourly.temperature_2m[idx]),
+              maxTemp: parseInt(apiHourly.hourly.temperature_2m[idx]),
+            };
+          }
+
+          days[dayKey].minTemp = Math.min(days[dayKey].minTemp, parseInt(apiHourly.hourly.temperature_2m[idx]));
+          days[dayKey].maxTemp = Math.max(days[dayKey].maxTemp, parseInt(apiHourly.hourly.temperature_2m[idx]));
+
+          if ((hour % intervalHour) !== 0) continue;
+    
+          days[dayKey].hours.push({
+            timeStr,
+            temperature: parseInt(apiHourly.hourly.temperature_2m[idx]),
+            temperatureUnit: apiHourly.hourly_units.temperature_2m,
+            probabilityOfPrecipitation: apiHourly.hourly.precipitation_probability[idx],
+            windSpeed: `${parseInt(apiHourly.hourly.wind_speed_10m[idx])} ~ ${parseInt(apiHourly.hourly.wind_gusts_10m[idx])}`,
+            windSpeedUnit: apiHourly.hourly_units.wind_speed_10m,
+            windSpeedEval: windSpeedEval(parseInt(apiHourly.hourly.wind_speed_10m[idx], apiHourly.hourly_units.wind_speed_10m)),
+            windDirection: windDirEval(apiHourly.hourly.wind_direction_10m[idx]),
+            description: parseWmoCode(apiHourly.hourly.weather_code[idx]) || '',
+          });
+        }
+        break;
+      
+      default:
     }
 
-    let sortedDays = Object.keys(days).sort().map(key => {
-      let day = days[key];
-      let temps = day.hours.map(h => h.temperature);
-      day.minTemp = parseInt(Math.min(...temps));
-      day.maxTemp = parseInt(Math.max(...temps));
-      return day;
-    });
+    let sortedDays = Object.keys(days).sort().map(key => days[key]);
+
+    // console.log({sortedDays});
+
     setForecastDays(sortedDays);
   };
 
-  const windSpeedEval = (mph) => {
-    if (mph <= 12) return 'low';
-    if (mph >= 16) return 'high';
+  const windSpeedEval = (spd, unit='mph') => {
+    if (spd <  12) return 'low';
+    if (spd >= 16) return 'high';
     return 'medium';
+  }
+
+  const windDirEval = (deg) => {
+    const arc = 22.5;
+    const half = arc/2.0;
+
+    if(deg > (360-half) || deg < half) return 'N';
+    if(deg < 22.5+half) return 'NNE';
+    if(deg < 45.0+half) return 'NE';
+    if(deg < 67.5+half) return 'ENE';
+    if(deg < 90.0+half) return 'E';
+    if(deg < 112.5+half) return 'ESE';
+    if(deg < 135.0+half) return 'SE';
+    if(deg < 157.5+half) return 'SSE';
+    if(deg < 180.0+half) return 'S';
+    if(deg < 202.5+half) return 'SSW';
+    if(deg < 225.0+half) return 'SW';
+    if(deg < 247.5+half) return 'WSW';
+    if(deg < 270.0+half) return 'W';
+    if(deg < 292.5+half) return 'WNW';
+    if(deg < 315.0+half) return 'NW';
+    if(deg < 337.5+half) return 'NNW';
+  }
+
+  const parseWmoCode = (code) => {
+    switch(parseInt(code)) {
+      case 0: return 'Clear';
+      case 1: return 'Mainly clear';
+      case 2: return 'Partly cloudy';
+      case 3: return 'Overcast';
+      case 45: case 48: return 'Fog';
+      case 51: return 'Light drizzle';
+      case 53: return 'Moderate drizzle';
+      case 55: return 'Dense drizzle';
+      case 61: return 'Slight rain';
+      case 63: return 'Moderate rain';
+      case 65: return 'Heavy rain';
+      case 66: case 67: return 'Freezing rain';
+      case 71: return 'Slight snow';
+      case 73: return 'Moderate snow';
+      case 75: return 'Heavy snow';
+      case 77: return 'Snow grains';
+      case 80: return 'Slight showers';
+      case 81: return 'Moderate showers';
+      case 82: return 'Violent showers';
+      case 85: return 'Slight snow showers';
+      case 86: return 'Heavy snow showers';
+      case 95: return 'Thunderstorm';
+      case 96: case 99: return 'Thunderstorm and hail';
+      default: return null;
+    }
   }
 
   const handleInterval = (hr) => {
@@ -282,7 +471,7 @@ export default function App() {
         {forecastDays.map(d => <ForecastDay data={d} key={d.dateStr} />)}
       </div>
       <div className="metaBox">
-        <div>{locName} ({loc.lng.toFixed(4)},{loc.lat.toFixed(4)})</div>
+        <div>lat: {loc.lat.toFixed(4)}, lng: {loc.lng.toFixed(4)}</div>
         <div className="options">
           Interval:&nbsp;
           <button className={`btn-link ${intervalHour === 3 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(3)}>3h</button>&nbsp;
@@ -298,7 +487,7 @@ export default function App() {
 function ForecastDay({data}) {
   return (<div className="day">
     <div className="dateLine"><span>
-      <span className="date">{data.dateStr}</span>&nbsp;
+      <span className="date" title={data.tz}>{data.dateStr}</span>&nbsp;
       <span className="temp min" title="minimum">{data.minTemp}°</span>&nbsp;
       <span className="temp max" title="maximum">{data.maxTemp}°</span>
     </span></div>
@@ -311,12 +500,12 @@ function ForecastHour({data}) {
     <div className="time">{data.timeStr}</div>
     <div className={`pair wind ${data.windSpeedEval}`}>
       <div className={`left emoji arrow ${data.windDirection}`}>↑</div>
-      <div className="text">{data.windSpeed}</div>
+      <div className="text" title={data.windSpeedUnit}>{data.windSpeed}<span className="unit below"><br/>{data.windSpeedUnit}</span></div>
     </div>
 
-    <div className="pair precip"><span className="left emoji">🌧️</span><span>{data.probabilityOfPrecipitation.value}%</span></div>
+    <div className="pair precip"><span className="left emoji">🌧️</span><span>{data.probabilityOfPrecipitation}%</span></div>
 
-    <div className="pair temp"><span className="left emoji">🌡️</span>{data.temperature}°{data.temperatureUnit}</div>
-    <div className="icon"><img src={data.icon} alt={data.shortForecast} /></div>
+    <div className="pair temp"><span className="left emoji">🌡️</span>{data.temperature} <span className="unit after">{data.temperatureUnit}</span></div>
+    <div className="description">{data.description}</div>
   </div>);
 };

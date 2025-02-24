@@ -35,6 +35,7 @@ html, body {
 }
 
 .dateLine {
+  margin-left: 5px;
   margin-bottom: 4px;
 }
 .dateLine > span {
@@ -47,9 +48,28 @@ html, body {
 span.temp.min { color: blue; }
 span.temp.max { color: red; }
 
+.unit {
+  font-size: x-small;
+  color: #999;
+  vertical-align: bottom;
+}
+.unit.below {
+  vertical-align: top;
+}
+.unit.after {
+  padding-left: .2em;
+  padding-top: .2em;
+}
+
+
+.hours {
+  display: table;
+  border-spacing: 5px 0;
+}
 .hour {
-  display: inline-block;
-  margin-right: 5px;
+  display: table-cell;
+  vertical-align: top;
+  /* margin-right: 5px; */
   border: .5px solid grey;
   background: #fff;
   border-radius: 4px;
@@ -70,7 +90,7 @@ span.temp.max { color: red; }
   display: inline-block;
   text-align: center;
   font-size: 1.5em;
-  transform-origin: 50% 50%;
+  transform-origin: 50% 40%;
 }
 .wind > .text {
   position: relative;
@@ -98,12 +118,12 @@ span.temp.max { color: red; }
 .wind .arrow.SE  { transform: rotate(315.0deg); }
 .wind .arrow.SSE { transform: rotate(337.5deg); }
 
-.hour .icon {
+.hour .description {
   text-align: center;
-}
-.hour .icon img {
-  height: 34px;
-  margin-top: 3px;
+  font-size: x-small;
+  max-width: 80px;
+  margin: 0 auto;
+  overflow-x: hidden;
 }
 
 
