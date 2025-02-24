@@ -483,7 +483,9 @@ export default function App() {
           Interval:&nbsp;
           <button className={`btn-link ${intervalHour === 3 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(3)}>3h</button>&nbsp;
           <button className={`btn-link ${intervalHour === 2 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(2)}>2h</button>&nbsp;
-          <button className={`btn-link ${intervalHour === 1 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(1)}>1h</button>&nbsp;
+          <button className={`btn-link ${intervalHour === 1 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(1)}>1h</button>
+        </div>
+        <div className="options">
           Units:&nbsp;
           <button className={`btn-link ${units === 'imperial' ? 'active' : 'inactive'}`} onClick={(e) => handleUnits('imperial')}>imperial</button>&nbsp;
           <button className={`btn-link ${units === 'metric' ? 'active' : 'inactive'}`} onClick={(e) => handleUnits('metric')}>metric</button>
