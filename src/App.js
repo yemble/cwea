@@ -515,9 +515,15 @@ function ForecastHour({data}) {
       <div className="text" title={data.windSpeedUnit}>{data.windSpeed}<span className="unit below"><br/>{data.windSpeedUnit}</span></div>
     </div>
 
-    <div className="pair precip"><span className="left emoji">🌧️</span><span>{data.probabilityOfPrecipitation}%</span></div>
+    <div className="pair precip">
+      <span className="left emoji"><span className="material-symbols-outlined">rainy</span></span>
+      <span>{data.probabilityOfPrecipitation}%</span>
+    </div>
 
-    <div className="pair temp"><span className="left emoji">🌡️</span>{data.temperature} <span className="unit after">{data.temperatureUnit}</span></div>
+    <div className="pair temp">
+      <span className="left emoji"><span className="material-symbols-outlined">device_thermostat</span></span>
+      <span>{data.temperature} <span className="unit after">{data.temperatureUnit}</span></span>
+    </div>
     <div className="description">{data.description}</div>
   </div>);
 };

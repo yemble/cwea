@@ -101,7 +101,7 @@ span.temp.max { color: red; }
 .wind.medium .arrow { color: orange; }
 .wind.high .arrow { color: red; }
 
-.wind .arrow.S   { }
+/* .wind .arrow.S   { } */
 .wind .arrow.SSW { transform: rotate( 22.5deg); }
 .wind .arrow.SW  { transform: rotate( 45.0deg); }
 .wind .arrow.WSW { transform: rotate( 67.5deg); }
