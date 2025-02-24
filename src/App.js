@@ -11,6 +11,7 @@ let mapMarker = null;
 
 const SETTING_DEFAULT_LOC = 'defaultLoc';
 const SETTING_INTERVAL_HOUR = 'intervalHour';
+const SETTING_UNITS = 'units';
 
 const SOURCE_NWS = 'USA NWS';
 const SOURCE_OPENMETEO = 'Open-Meteo';
@@ -22,23 +23,16 @@ const getSettings = () => {
   let settings = {};
 
   let loc = Cookies.get(SETTING_DEFAULT_LOC);
-  if (loc) {
-    settings[SETTING_DEFAULT_LOC] = JSON.parse(loc);
-  }
-  else {
-    settings[SETTING_DEFAULT_LOC] = {
-      lng:-105.75505156380228,
-      lat:40.441373439936406,
-    };
-  }
+  settings[SETTING_DEFAULT_LOC] = loc ? JSON.parse(loc) : {
+    lng:-105.75505156380228,
+    lat:40.441373439936406,
+  };
 
   let ih = Cookies.get(SETTING_INTERVAL_HOUR);
-  if (ih) {
-    settings[SETTING_INTERVAL_HOUR] = parseInt(ih);
-  }
-  else {
-    settings[SETTING_INTERVAL_HOUR] = 3;
-  }
+  settings[SETTING_INTERVAL_HOUR] = ih ? parseInt(ih) : 3;
+
+  let u = Cookies.get(SETTING_UNITS);
+  settings[SETTING_UNITS] = u || 'imperial';
 
   return settings;
 };
@@ -47,6 +41,9 @@ const saveDefaultLoc = (loc) => {
 };
 const saveIntervalHour = (hr) => {
   Cookies.set(SETTING_INTERVAL_HOUR, hr, {expires: 365});
+};
+const saveUnits = (u) => {
+  Cookies.set(SETTING_UNITS, u, {expires: 365});
 };
 
 export default function App() {
@@ -65,6 +62,7 @@ export default function App() {
   const [forecastDays, setForecastDays] = useState([]);
 
   const [intervalHour, setIntervalHour] = useState( getSettings()[SETTING_INTERVAL_HOUR] )
+  const [units, setUnits] = useState( getSettings()[SETTING_UNITS] )
 
   const locHash = (loc) => {
     return `${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
@@ -190,10 +188,14 @@ export default function App() {
         break;
 
       case SOURCE_OPENMETEO:
+        let unitArgs = units === 'imperial'
+          ? '&temperature_unit=fahrenheit&wind_speed_unit=mph&timeformat=unixtime'
+          : '&temperature_unit=celsius&timeformat=unixtime';
+
         let omURL = `https://api.open-meteo.com/v1/forecast?forecast_days=14`
         + `&latitude=${currentPointMetadata.lat.toFixed(4)}&longitude=${currentPointMetadata.lng.toFixed(4)}`
         + `&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
-        + `&temperature_unit=fahrenheit&wind_speed_unit=mph&timeformat=unixtime`
+        + unitArgs
         + `&timezone=${currentPointMetadata.timeZone}`;
 
         if (omURL in dataCache) {
@@ -216,7 +218,7 @@ export default function App() {
       default:
         throw new Error("Unknown data source: " + dataSource);
     }
-  }, [currentPointMetadata]);
+  }, [currentPointMetadata, units]);
 
   // and draw it all
   useEffect(() => {
@@ -465,6 +467,11 @@ export default function App() {
     setIntervalHour(hr);
   };
 
+  const handleUnits = (u) => {
+    saveUnits(u);
+    setUnits(u);
+  };
+
   return (
     <>
       <div className="forecastInfo">
@@ -476,7 +483,10 @@ export default function App() {
           Interval:&nbsp;
           <button className={`btn-link ${intervalHour === 3 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(3)}>3h</button>&nbsp;
           <button className={`btn-link ${intervalHour === 2 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(2)}>2h</button>&nbsp;
-          <button className={`btn-link ${intervalHour === 1 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(1)}>1h</button>
+          <button className={`btn-link ${intervalHour === 1 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(1)}>1h</button>&nbsp;
+          Units:&nbsp;
+          <button className={`btn-link ${units === 'imperial' ? 'active' : 'inactive'}`} onClick={(e) => handleUnits('imperial')}>imperial</button>&nbsp;
+          <button className={`btn-link ${units === 'metric' ? 'active' : 'inactive'}`} onClick={(e) => handleUnits('metric')}>metric</button>
         </div>
       </div>
       <div ref={mapContainer} className="map-container" />
