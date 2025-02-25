@@ -407,7 +407,6 @@ export default function App() {
   };
 
   const windSpeedEval = (spd, unit='mph') => {
-    console.log({spd,unit});
     switch(unit) {
       case 'kph':
       case 'km/h':

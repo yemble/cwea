@@ -45,8 +45,8 @@ html, body {
   border-radius: 2px;
 }
 
-span.temp.min { color: blue; }
-span.temp.max { color: red; }
+span.temp.min { color: cadetblue; }
+span.temp.max { color: darkorange; }
 
 .unit {
   font-size: x-small;
