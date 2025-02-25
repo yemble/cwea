@@ -343,7 +343,7 @@ export default function App() {
             probabilityOfPrecipitation: per.probabilityOfPrecipitation.value,
             windSpeed: parseInt(per.windSpeed),
             windSpeedUnit: 'mph',
-            windSpeedEval: windSpeedEval(parseInt(per.windSpeed)),
+            windSpeedEval: windSpeedEval(parseFloat(per.windSpeed)),
             windDirection: per.windDirection,
             description: per.shortForecast,
             // icon: per.icon,
@@ -386,9 +386,10 @@ export default function App() {
             temperature: parseInt(apiHourly.hourly.temperature_2m[idx]),
             temperatureUnit: apiHourly.hourly_units.temperature_2m,
             probabilityOfPrecipitation: apiHourly.hourly.precipitation_probability[idx],
-            windSpeed: `${parseInt(apiHourly.hourly.wind_speed_10m[idx])} ~ ${parseInt(apiHourly.hourly.wind_gusts_10m[idx])}`,
+            windSpeed: parseInt(apiHourly.hourly.wind_speed_10m[idx]),
+            gustSpeed: parseInt(apiHourly.hourly.wind_gusts_10m[idx]),
             windSpeedUnit: apiHourly.hourly_units.wind_speed_10m,
-            windSpeedEval: windSpeedEval(parseInt(apiHourly.hourly.wind_speed_10m[idx], apiHourly.hourly_units.wind_speed_10m)),
+            windSpeedEval: windSpeedEval(parseFloat(apiHourly.hourly.wind_speed_10m[idx]), apiHourly.hourly_units.wind_speed_10m),
             windDirection: windDirEval(apiHourly.hourly.wind_direction_10m[idx]),
             description: parseWmoCode(apiHourly.hourly.weather_code[idx]) || '',
           });
@@ -406,6 +407,18 @@ export default function App() {
   };
 
   const windSpeedEval = (spd, unit='mph') => {
+    console.log({spd,unit});
+    switch(unit) {
+      case 'kph':
+      case 'km/h':
+        spd /= 1.62;
+        break;
+      case 'kt':
+      case 'knots':
+        spd /= 1.15078;
+        break;
+      default:
+    }
     if (spd <  12) return 'low';
     if (spd >= 16) return 'high';
     return 'medium';
@@ -512,7 +525,11 @@ function ForecastHour({data}) {
     <div className="time">{data.timeStr}</div>
     <div className={`pair wind ${data.windSpeedEval}`}>
       <div className={`left emoji arrow ${data.windDirection}`}><span className="material-symbols-outlined">north</span></div>
-      <div className="text" title={data.windSpeedUnit}>{data.windSpeed}<span className="unit below"><br/>{data.windSpeedUnit}</span></div>
+      <div className="text">
+        {data.windSpeed}
+        {data.gustSpeed ? (<span><span className="tilde">&nbsp;~&nbsp;</span>{data.gustSpeed}</span>) : null}
+        <span className="unit below"><br/>{data.windSpeedUnit}</span>
+      </div>
     </div>
 
     <div className="pair precip">

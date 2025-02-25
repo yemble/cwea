@@ -57,8 +57,8 @@ span.temp.max { color: red; }
   vertical-align: top;
 }
 .unit.after {
-  padding-left: .2em;
-  padding-top: .2em;
+  position: relative;
+  bottom: .1em;
 }
 
 
@@ -86,18 +86,27 @@ span.temp.max { color: red; }
   width: 30px;
 }
 
+.hour .tilde {
+  font-size: small;
+  position: relative;
+  bottom: .1em;
+}
+
 .wind > .arrow {
   display: inline-block;
   text-align: center;
-  font-size: 1.5em;
-  transform-origin: 50% 40%;
+  transform-origin: 50% 30%;
+}
+.wind .arrow .material-symbols-outlined {
+  font-size: 21px;
+  font-weight: 800;
 }
 .wind > .text {
   position: relative;
   top: 2px;
 }
 
-.wind.low .arrow { color: darkgreen; }
+.wind.low .arrow { color: limegreen; }
 .wind.medium .arrow { color: orange; }
 .wind.high .arrow { color: red; }
 
