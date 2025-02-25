@@ -511,7 +511,7 @@ function ForecastHour({data}) {
   return (<div className="hour" title={data.shortForecast}>
     <div className="time">{data.timeStr}</div>
     <div className={`pair wind ${data.windSpeedEval}`}>
-      <div className={`left emoji arrow ${data.windDirection}`}>↑</div>
+      <div className={`left emoji arrow ${data.windDirection}`}><span className="material-symbols-outlined">north</span></div>
       <div className="text" title={data.windSpeedUnit}>{data.windSpeed}<span className="unit below"><br/>{data.windSpeedUnit}</span></div>
     </div>
 
