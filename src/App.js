@@ -6,6 +6,8 @@ import Cookies from 'js-cookie';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoieWVtYmxlIiwiYSI6ImNtMDl3Y2J3ajEzZTEybHB5dHRheXhlMzcifQ.T8Qw5LTnRFY09SCfrpnwSA';
 
+const tzdbKey = 'A7PC72T17P3L';
+
 const MAP_LOC_LAYER_ID = 'mapLocLayer';
 let mapMarker = null;
 
@@ -63,6 +65,7 @@ export default function App() {
 
   const [intervalHour, setIntervalHour] = useState( getSettings()[SETTING_INTERVAL_HOUR] )
   const [units, setUnits] = useState( getSettings()[SETTING_UNITS] )
+  const [displayedTimeZone, setDisplayedTimeZone] = useState(null);
 
   const locHash = (loc) => {
     return `${loc.lat.toFixed(4)},${loc.lng.toFixed(4)}`;
@@ -148,13 +151,20 @@ export default function App() {
         break;
 
       case SOURCE_OPENMETEO:
-        // TODO: fetch timezone?
-        setCurrentPointMetadata({
-          lat: loc.lat,
-          lng: loc.lng,
-          source: SOURCE_OPENMETEO,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        });
+        async function fetchTimezone() {
+          let url = `http://api.timezonedb.com/v2.1/get-time-zone?key=${tzdbKey}&format=json&fields=zoneName&by=position&lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}`;
+          console.log(`Fetching ${url}`);
+          await fetch(url).then(r => r.json()).then(d => {
+            setApiHourly(null);
+            setCurrentPointMetadata({
+              lat: loc.lat,
+              lng: loc.lng,
+              source: SOURCE_OPENMETEO,
+              timeZone: d.zoneName || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            });
+          });
+        }
+        fetchTimezone();
         break;
       
       default:
@@ -165,6 +175,8 @@ export default function App() {
   // then get forecast
   useEffect(() => {
     if (!currentPointMetadata) return;
+
+    setDisplayedTimeZone(currentPointMetadata.timeZone);
 
     switch(dataSource) {
       case SOURCE_NWS:
@@ -490,8 +502,9 @@ export default function App() {
         {forecastDays.map(d => <ForecastDay data={d} key={d.dateStr} />)}
       </div>
       <div className="metaBox">
-        <div>lat: {loc.lat.toFixed(4)}, lng: {loc.lng.toFixed(4)}</div>
-        <div className="options">
+      <div>lat: {loc.lat.toFixed(4)}, lng: {loc.lng.toFixed(4)}</div>
+      <div>tz: {(displayedTimeZone||'').toLowerCase()}</div>
+      <div className="options">
           Interval:&nbsp;
           <button className={`btn-link ${intervalHour === 3 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(3)}>3h</button>&nbsp;
           <button className={`btn-link ${intervalHour === 2 ? 'active' : 'inactive'}`} onClick={(e) => handleInterval(2)}>2h</button>&nbsp;
