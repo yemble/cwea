@@ -132,7 +132,7 @@ export default function App() {
         }
         else {
           async function fetchPoint() {
-            console.log(`Fetching ${url}`);
+            // console.log(`Fetching ${url}`);
             dataCache[url] = null; // debounce
             await fetch(url).then(r => r.json()).then(d => {
               dataCache[url] = d;
@@ -152,8 +152,8 @@ export default function App() {
 
       case SOURCE_OPENMETEO:
         async function fetchTimezone() {
-          let url = `http://api.timezonedb.com/v2.1/get-time-zone?key=${tzdbKey}&format=json&fields=zoneName&by=position&lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}`;
-          console.log(`Fetching ${url}`);
+          let url = `https://api.timezonedb.com/v2.1/get-time-zone?key=${tzdbKey}&format=json&fields=zoneName&by=position&lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}`;
+          // console.log(`Fetching ${url}`);
           await fetch(url).then(r => r.json()).then(d => {
             setApiHourly(null);
             setCurrentPointMetadata({
@@ -187,7 +187,7 @@ export default function App() {
         }
         else {
           async function fetchNwsHourly() {
-            console.log(`Fetching ${nwsURL}`);
+            // console.log(`Fetching ${nwsURL}`);
             await fetch(nwsURL)
             .then(r => r.json())
             .then(d => {
@@ -215,7 +215,7 @@ export default function App() {
         }
         else {
           async function fetchOmHourly() {
-            console.log(`Fetching ${omURL}`);
+            // console.log(`Fetching ${omURL}`);
             await fetch(omURL)
             .then(r => r.json())
             .then(d => {
